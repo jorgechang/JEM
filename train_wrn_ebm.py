@@ -26,6 +26,8 @@ import wideresnet
 import json
 # Sampling
 from tqdm import tqdm
+from gloss_dataset import GlossDataset
+
 t.backends.cudnn.benchmark = True
 t.backends.cudnn.enabled = True
 seed = 1
@@ -134,6 +136,16 @@ def get_data(args):
              tr.Normalize((.5, .5, .5), (.5, .5, .5)),
              lambda x: x + args.sigma * t.randn_like(x)]
         )
+    elif args.dataset == "gloss":
+        transform_train = tr.Compose(
+            [tr.ToPILImage(),
+             tr.Pad(4, padding_mode="reflect"),
+             tr.RandomCrop(im_sz),
+             tr.RandomHorizontalFlip(),
+             tr.ToTensor(),
+             tr.Normalize((.5, .5, .5), (.5, .5, .5)),
+             lambda x: x + args.sigma * t.randn_like(x)]
+        )
     else:
         transform_train = tr.Compose(
             [tr.Pad(4, padding_mode="reflect"),
@@ -153,12 +165,15 @@ def get_data(args):
             return tv.datasets.CIFAR10(root=args.data_root, transform=transform, download=True, train=train)
         elif args.dataset == "cifar100":
             return tv.datasets.CIFAR100(root=args.data_root, transform=transform, download=True, train=train)
+        elif args.dataset == "gloss":
+            return GlossDataset(args.data_root, train=train, transform=transform)
         else:
             return tv.datasets.SVHN(root=args.data_root, transform=transform, download=True,
                                     split="train" if train else "test")
 
     # get all training inds
     full_train = dataset_fn(True, transform_train)
+    print(full_train)
     all_inds = list(range(len(full_train)))
     # set seed
     np.random.seed(1234)
@@ -398,8 +413,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Energy Based Models and Shit")
-    parser.add_argument("--dataset", type=str, default="cifar10", choices=["cifar10", "svhn", "cifar100"])
-    parser.add_argument("--data_root", type=str, default="../data")
+    parser.add_argument("--dataset", type=str, default="gloss", choices=["cifar10", "svhn", "cifar100", "gloss"])
+    parser.add_argument("--data_root", type=str, default="./images")
     # optimization
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--decay_epochs", nargs="+", type=int, default=[160, 180],
