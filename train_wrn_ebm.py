@@ -30,8 +30,8 @@ from gloss_dataset import GlossDataset
 
 t.backends.cudnn.benchmark = True
 t.backends.cudnn.enabled = True
-seed = 1
-im_sz = 32
+seed = 3
+im_sz = 128
 n_ch = 3
 
 
@@ -176,7 +176,7 @@ def get_data(args):
     print(full_train)
     all_inds = list(range(len(full_train)))
     # set seed
-    np.random.seed(1234)
+    np.random.seed(seed)
     # shuffle
     np.random.shuffle(all_inds)
     # seperate out validation set
@@ -442,7 +442,7 @@ if __name__ == "__main__":
     parser.add_argument("--norm", type=str, default=None, choices=[None, "norm", "batch", "instance", "layer", "act"],
                         help="norm to add to weights, none works fine")
     # EBM specific
-    parser.add_argument("--n_steps", type=int, default=20,
+    parser.add_argument("--n_steps", type=int, default=30,
                         help="number of steps of SGLD per iteration, 100 works for short-run, 20 works for PCD")
     parser.add_argument("--width", type=int, default=10, help="WRN width parameter")
     parser.add_argument("--depth", type=int, default=28, help="WRN depth parameter")
@@ -466,5 +466,11 @@ if __name__ == "__main__":
     parser.add_argument("--n_valid", type=int, default=5000)
 
     args = parser.parse_args()
-    args.n_classes = 100 if args.dataset == "cifar100" else 10
+    if args.dataset == "cifar100":
+        args.n_classes = 100 
+    elif args.dataset == "gloss":
+        args.n_classes = 2
+    else:
+        args.n_classes = 100  
+
     main(args)

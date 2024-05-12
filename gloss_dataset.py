@@ -12,10 +12,9 @@ class GlossDataset(Dataset):
         self.transform = transform
         self.train_cutoff = 9000
         self.img_files = [f for f in os.listdir(data_dir) if f.endswith(('.png', '.jpg', '.jpeg'))]
-        self.img_paths = [f for f in self.img_files]
+        self.img_paths = []  # Initialize an empty list
         self.labels = self._load_labels()  # Load labels internally
         self.images = self._load_images()
-        print(len(self.labels), len(self.images))
 
     def _load_images(self):
         images = []
@@ -30,6 +29,9 @@ class GlossDataset(Dataset):
 
     def _load_labels(self):
         image_info = pd.read_csv('image_information.csv')
+        image_info['scene_num'] = image_info['scene_num'].apply(lambda x: f"rgb_{x}.png")
+        # Update img_paths with the processed scene_num column
+        self.img_paths = list(image_info['scene_num'])
         gloss_labels = np.array(image_info['gloss_cat']).astype('int')
         return gloss_labels
 
@@ -39,8 +41,6 @@ class GlossDataset(Dataset):
     def __getitem__(self, idx):
         image = self.images[idx]
         label = self.labels[idx]
-        if self.transform:
-            image = self.transform(image)
         return image, label
 
     def get_data(self):
